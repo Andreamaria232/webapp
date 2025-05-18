@@ -12,7 +12,7 @@ GOOGLE_SHEET_TAB = "Foglio1"
 
 #Setup credenziali
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name("monitoraggio-del-fumo-66cf18f7df20.json", scope)
 client = gspread.authorize(creds)
 sheet = client.open(GOOGLE_SHEET_NAME).worksheet(GOOGLE_SHEET_TAB)
 

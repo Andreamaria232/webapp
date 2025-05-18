@@ -6,17 +6,26 @@ from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-#Imposta foglio google
-GOOGLE_SHEET_NAME = "Datifumo"
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+# Imposta l'accesso al Google Sheet via URL
+GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1ruP6kwxO0yUV7pMMYUmcWIkybUbdgXGbTrCbrbtfslw/edit?usp=sharing"
+GOOGLE_SHEET_ID = "1ruP6kwxO0yUV7pMMYUmcWIkybUbdgXGbTrCbrbtfslw"
 GOOGLE_SHEET_TAB = "Foglio1"
 
-#Setup credenziali
+# Setup credenziali
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("monitoraggio-del-fumo-66cf18f7df20.json", scope)
 client = gspread.authorize(creds)
-sheet = client.open(GOOGLE_SHEET_NAME).worksheet(GOOGLE_SHEET_TAB)
+sheet = client.open_by_key(GOOGLE_SHEET_ID).worksheet(GOOGLE_SHEET_TAB)
 
-def load_data(): #definisco le colonne che ci devono essere nel file storico
+def load_data():
     data = sheet.get_all_records()
     return pd.DataFrame(data)
 
@@ -24,10 +33,8 @@ def save_data(new_df):
     existing_records = sheet.get_all_records()
     existing_df = pd.DataFrame(existing_records)
 
-    # Concateno i dati nuovi con quelli esistenti
     updated_df = pd.concat([existing_df, new_df], ignore_index=True)
 
-    # Scrivo solo le nuove righe (append manuale)
     for i in range(len(new_df)):
         row = new_df.iloc[i].tolist()
         sheet.append_row(row)

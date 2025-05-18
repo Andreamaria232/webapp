@@ -272,5 +272,7 @@ if not df.empty:
             st.pyplot(fig)
 
         somma_nicotina = df_periodo['nicotina_totale'].sum()
+        somma_sigarette = df_periodo['sig_stimate'].sum()
         st.markdown(f"**Media nicotina assunta nel periodo selezionato:** {media_nicotina:.2f} mg")
         st.markdown(f"**Totale nicotina assunta nel periodo selezionato:** {somma_nicotina:.2f} mg")
+        st.markdown(f"**Totale sigarette fumate nel periodo selezionato:** {somma_sigarette:.0f}")

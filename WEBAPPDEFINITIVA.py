@@ -3,25 +3,38 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-# Crea file in cui salvare tutti i csv caricati nel programma dall'utente
-STORICO_FILE = "dati_fumo.csv"
+#Imposta foglio google
+GOOGLE_SHEET_NAME = "Datifumo"
+GOOGLE_SHEET_TAB = "Foglio1"
+
+#Setup credenziali
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+client = gspread.authorize(creds)
+sheet = client.open(GOOGLE_SHEET_NAME).worksheet(GOOGLE_SHEET_TAB)
 
 def load_data(): #definisco le colonne che ci devono essere nel file storico
-    if os.path.exists(STORICO_FILE):
-        return pd.read_csv(STORICO_FILE)
-    else:
-        return pd.DataFrame(columns=["email", "data", "stress", "sigarette_stimate", "nicotina_totale"]) # colonne relative ai dati di interesse
+    data = sheet.get_all_records()
+    return pd.DataFrame(data)
 
-def save_data(df): #definisco la funzione per salvare i dati da immagazzinare
-    df.to_csv(STORICO_FILE, index=False)
+def save_data(new_df):
+    existing_records = sheet.get_all_records()
+    existing_df = pd.DataFrame(existing_records)
 
-def delete_file(file_path): #definisco la funzione per cancellare il foglio di lavoro
-    if os.path.exists(STORICO_FILE):
-        os.remove(STORICO_FILE)
-        print(f"dati fumo.csv è stato cancellato.")
-    else:
-        print(f"Il file dati fumo.csv non esiste.")
+    # Concateno i dati nuovi con quelli esistenti
+    updated_df = pd.concat([existing_df, new_df], ignore_index=True)
+
+    # Scrivo solo le nuove righe (append manuale)
+    for i in range(len(new_df)):
+        row = new_df.iloc[i].tolist()
+        sheet.append_row(row)
+
+def delete_file(file_path=None):
+    sheet.clear()
+    print("I dati su Google Sheets sono stati cancellati.")
 
 # Layout iniziale della pagina web tramite streamlit
 st.set_page_config(page_title="Monitoraggio Fumo", layout="wide")

@@ -9,6 +9,7 @@ from google.oauth2.service_account import Credentials
 
 # Legge le credenziali dalla variabile d'ambiente (Render)
 creds_json = os.environ.get("GOOGLE_CREDS")
+st.write(creds_json)
 creds_dict = json.loads(creds_json)
 
 # Autenticazione con Google Sheets API

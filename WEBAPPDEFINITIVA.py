@@ -9,12 +9,29 @@ from google.oauth2.service_account import Credentials
 
 # Legge le credenziali dalla variabile d'ambiente (Render)
 creds_json = os.environ.get("GOOGLE_CREDS")
-st.write(creds_json)
-creds_dict = json.loads(creds_json)
+
+if not creds_json:
+    raise ValueError("Errore: La variabile d'ambiente GOOGLE_CREDS non è impostata.")
+
+try:
+    creds_dict = json.loads(creds_json)
+except json.JSONDecodeError as e:
+    raise ValueError(f"Errore nel parsing delle credenziali JSON: {e}")
 
 # Autenticazione con Google Sheets API
-creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
-gc = gspread.authorize(creds)
+try:
+    creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+    gc = gspread.authorize(creds)
+    print("Autenticazione riuscita!")
+except Exception as e:
+    raise ValueError(f"Errore di autenticazione: {e}")
+
+# Collegamento al foglio Google Sheets
+try:
+    sheet = gc.open("DatiFumo").sheet1  # Assicurati che il nome sia esattamente quello del file su Google Sheets
+    print("Accesso al foglio riuscito!")
+except Exception as e:
+    raise ValueError(f"Errore nell'accesso al foglio: {e}")
 
 # Collegamento al foglio Google Sheets (devi scrivere il nome esatto del file)
 sheet = gc.open("DatiFumo").sheet1  # ← qui inserisci il NOME ESATTO del file che contiene le risposte

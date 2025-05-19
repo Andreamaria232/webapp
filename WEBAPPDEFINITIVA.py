@@ -6,14 +6,6 @@ from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import os
-from datetime import datetime
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-
 # Imposta l'accesso al Google Sheet via URL
 GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1ruP6kwxO0yUV7pMMYUmcWIkybUbdgXGbTrCbrbtfslw/edit?usp=sharing"
 GOOGLE_SHEET_ID = "1ruP6kwxO0yUV7pMMYUmcWIkybUbdgXGbTrCbrbtfslw"

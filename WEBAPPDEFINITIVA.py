@@ -3,17 +3,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 import gspread
+import os
+import json
 from google.oauth2.service_account import Credentials
 
-# Imposta l'accesso al Google Sheet via URL
-GOOGLE_SHEET_ID = "1ruP6kwxO0yUV7pMMYUmcWIkybUbdgXGbTrCbrbtfslw"
-GOOGLE_SHEET_TAB = "Foglio1"
+creds_json = os.environ.get("STREAMLIT_SECRETS")
 
-# Setup credenziali
-scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-creds = Credentials.from_service_account_file("monitoraggio-del-fumo-66cf18f7df20.json", scopes=scope)
-client = gspread.authorize(creds)
-sheet = client.open_by_key(GOOGLE_SHEET_ID).worksheet(GOOGLE_SHEET_TAB)
+# Leggi il JSON dal secrets.toml
+import streamlit as st
+
+creds_dict = json.loads(st.secrets["google"]["creds"])
+
+creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
 
 def load_data():
     data = sheet.get_all_records()

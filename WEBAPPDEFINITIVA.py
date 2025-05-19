@@ -2,19 +2,22 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
-import gspread
 import os
 import json
+import gspread
 from google.oauth2.service_account import Credentials
 
-creds_json = os.environ.get("STREAMLIT_SECRETS")
+# Legge le credenziali dalla variabile d'ambiente (Render)
+creds_json = os.environ.get("GOOGLE_CREDS")
+creds_dict = json.loads(creds_json)
 
-# Leggi il JSON dal secrets.toml
-import streamlit as st
-
-creds_dict = json.loads(st.secrets["google"]["creds"])
-
+# Autenticazione con Google Sheets API
 creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+gc = gspread.authorize(creds)
+
+# Collegamento al foglio Google Sheets (devi scrivere il nome esatto del file)
+sheet = gc.open("DatiFumo").sheet1  # ← qui inserisci il NOME ESATTO del file che contiene le risposte
+
 
 def load_data():
     data = sheet.get_all_records()

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "monitoraggio-del-fumo",
+  "private_key_id": "e327955cf40aa0f5aa6658bc8b9b712cb508c73e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC+Djj3fmOKPS0s\n8oEbiWxzHK/6+UBSCX2GuGHCeEl3SHMJ7RtWFJ34fej0NVw9RqhNAFwQwPBnnHlH\nv/2oWkmJqpcsada0Fp/62GxdROzbYjF2rEWg0fiKN2RtkaA8HnLQi8UYzlZ7dUSN\nspF1IQ59slJh8rzNkwqe06uqG3ultD4oC0PGJyPwEMRApIpBrJApGyHOrCrCdNuf\nTakPtNFY/2gnK1j6nL9mKnJtlqhv2dZ2g6aqhWYha1XJgVS2nv4pojNpO92f1WNA\nfzLqd1yKzZdm5+YVvjAt66epm0d+UZjRSzZIykWh9oaIs2KmYaLxRzjbaSwKtkn2\n+7/7If5xAgMBAAECggEAC1m6GT3ZIAZrTkXlZAmfCnjqIakFKGEcuBEG9aBNcuxG\nwo8AlPGCRbbvVLZjHd28a2zcErwTH3z+2UQkGAvcXHZttN9VTUgUodyPDDrzkl6Y\n6ad8ORCRMWABhXGvCigfX0kZqlOYYqMsRvIlMcOZo/Qka2kd0YE4nyexFuWxSsIQ\nmyjrCL3S1MvkKbRDkO1XQhcZIX0mrVLlQsG4fuMRs4dMWDwvN7UmFapSpbsou9dK\nUWae98eY6dNqCUS2e+VGij6tqaJy9e5yEomf1ojx8EfDqXxm2OJSttmdwcpepjsi\ntw+FLhb3YtRlBO/q9kOMD6EnP6+9Txz369za0FemgQKBgQDnw8mw2Su86tLPdKuQ\nV3Uhtpbj9DIFov+m+7UjW8B9ocA9LcoH8Th8brKm+YSIzsKE67pzfgNbWPqJP2qy\nUWrQ+SWRSV3z66q/pTRM4douwqCkuuoTChQKjRM6AFwNnTIIwyh1owWAKzI2hWC+\nWP0kC0rnfCQAhE9P3uCpI+weGQKBgQDR7ebof9QOSgCK3Xk4XYinY1GrCx71Nua2\nbYGMVarFnUfPThytAUHfGn/A/CDf/S52QVa3AbIBRXnVhVSGXJX+6cS3jqhfJgMi\nKzTERgtsOurkM2DT4I0AiBmqASUI6o5MiwvYOCNiD0770D6iVAfb9bwID+7mRPpV\nvUVtnzE+GQKBgDBNuwyTxqziGDvKqjM0NyJmpr4t1/saxMOttEwBRHYqryFRGMlc\n+hPdEnkAiiHlTd9cLgkCG3r/aYAPapJtq6CQPMcyDlXXKUg2C1d2vv197PNITZ7Y\nO+MTEg3Fo2nm+FWhLx6NcokK97UrSUWC0IehnuPuGKbO7KTN4+78oKqJAoGBAK36\nxkWluu7ksbJkflQSYHCpRUPGAbAkAezqsFTHorIH+T17dRSEWD04Tux3iB9aSqlC\n2UTuKMIY/DHTQAviq4UJ5DhkCHJipHIq8J5BlrHp2kWptvOhw/nO0cYtEK5lBe21\nxuk5DUn1efYDzgTmM2U+MMlVux4nyHhKVkHVjw/xAoGBANZJyawyg78bn4thdFJP\npV9GH2WrtxJSjWUDhmyepdZMiHr458NaWk64VkI1uqoQIdWLnetq92VxM1H3A5tC\n74CrXvNKAubGq8GamGqn0wn119LyZeXAwPUomiMByc5sdoD6Q4GziU30eMfqzqOz\nm1H/EeiZdsfMIiSPXx33KzaM\n-----END PRIVATE KEY-----\n",
+  "client_email": "streamlit-fumo@monitoraggio-del-fumo.iam.gserviceaccount.com",
+  "client_id": "105898343689080838545",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/streamlit-fumo%40monitoraggio-del-fumo.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

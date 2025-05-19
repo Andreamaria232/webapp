@@ -1,19 +1,17 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
 from datetime import datetime
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 # Imposta l'accesso al Google Sheet via URL
-GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1ruP6kwxO0yUV7pMMYUmcWIkybUbdgXGbTrCbrbtfslw/edit?usp=sharing"
 GOOGLE_SHEET_ID = "1ruP6kwxO0yUV7pMMYUmcWIkybUbdgXGbTrCbrbtfslw"
 GOOGLE_SHEET_TAB = "Foglio1"
 
 # Setup credenziali
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("monitoraggio-del-fumo-66cf18f7df20.json", scope)
+scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+creds = Credentials.from_service_account_file("monitoraggio-del-fumo-66cf18f7df20.json", scopes=scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(GOOGLE_SHEET_ID).worksheet(GOOGLE_SHEET_TAB)
 

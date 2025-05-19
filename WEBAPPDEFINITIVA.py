@@ -7,6 +7,8 @@ import json
 import gspread
 from google.oauth2.service_account import Credentials
 
+print("VERSIONE AGGIORNATA - Questo dovrebbe essere il primo messaggio!")
+
 # Legge le credenziali dalla variabile d'ambiente (Render)
 creds_json = os.environ.get("GOOGLE_CREDS")
 

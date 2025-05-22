@@ -1,61 +1,57 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime
 import os
-import json
-import gspread
-from google.oauth2.service_account import Credentials
+from datetime import datetime, timedelta
+import dropbox
+from io import BytesIO
+import random
 
-print("VERSIONE AGGIORNATA - Questo dovrebbe essere il primo messaggio!")
+DROPBOX_PATH = "/filefumo.xlsx" 
 
-# Legge le credenziali dalla variabile d'ambiente (Render)
-creds_json = os.environ.get("GOOGLE_CREDS")
+dbx = dropbox.Dropbox(
+    oauth2_refresh_token=os.getenv("DROPBOX_REFRESH_TOKEN"),
+    app_key=os.getenv("DROPBOX_APP_KEY"),
+    app_secret=os.getenv("DROPBOX_APP_SECRET")
+)
 
-if not creds_json:
-    raise ValueError("Errore: La variabile d'ambiente GOOGLE_CREDS non è impostata.")
-
-try:
-    creds_dict = json.loads(creds_json)
-except json.JSONDecodeError as e:
-    raise ValueError(f"Errore nel parsing delle credenziali JSON: {e}")
-
-# Autenticazione con Google Sheets API
-try:
-    creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
-    gc = gspread.authorize(creds)
-    print("Autenticazione riuscita!")
-except Exception as e:
-    raise ValueError(f"Errore di autenticazione: {e}")
-
-# Collegamento al foglio Google Sheets
-try:
-    sheet = gc.open("DatiFumo").sheet1  # Assicurati che il nome sia esattamente quello del file su Google Sheets
-    print("Accesso al foglio riuscito!")
-except Exception as e:
-    raise ValueError(f"Errore nell'accesso al foglio: {e}")
-
-# Collegamento al foglio Google Sheets (devi scrivere il nome esatto del file)
-sheet = gc.open("DatiFumo").sheet1  # ← qui inserisci il NOME ESATTO del file che contiene le risposte
-
+def get_excel_file():
+    try:
+        metadata, res = dbx.files_download(DROPBOX_PATH)
+        return BytesIO(res.content)
+    except dropbox.exceptions.ApiError as e:
+        # Se il file non esiste ancora
+        return BytesIO()
 
 def load_data():
-    data = sheet.get_all_records()
-    return pd.DataFrame(data)
+    try:
+        data = pd.read_excel(get_excel_file())
+    except:
+        data = pd.DataFrame(columns=["email", "data", "stress", "sigarette_stimate", "nicotina_totale"])
+    return data
 
-def save_data(new_df):
-    existing_records = sheet.get_all_records()
-    existing_df = pd.DataFrame(existing_records)
+#salva aggiungendo i nuovi dati, senza sovrascrivere quelli esistenti
+def save_data(new_data):
+    existing_data = load_data()
 
-    updated_df = pd.concat([existing_df, new_df], ignore_index=True)
+    # Rimuove duplicati per email + data (opzionale)
+    existing_data = existing_data[~(
+        (existing_data["email"] == new_data.iloc[0]["email"]) &
+        (existing_data["data"] == new_data.iloc[0]["data"])
+    )]
 
-    for i in range(len(new_df)):
-        row = new_df.iloc[i].tolist()
-        sheet.append_row(row)
+    updated_df = pd.concat([existing_data, new_data], ignore_index=True)
+    output = BytesIO()
+    updated_df.to_excel(output, index=False, engine="openpyxl")
+    output.seek(0)
+    dbx.files_upload(output.read(), DROPBOX_PATH, mode=dropbox.files.WriteMode.overwrite)
 
-def delete_file(file_path=None):
-    sheet.clear()
-    print("I dati su Google Sheets sono stati cancellati.")
+def delete_file():
+    try:
+        dbx.files_delete_v2(DROPBOX_PATH)
+        st.success("File cancellato con successo da Dropbox.")
+    except dropbox.exceptions.ApiError:
+        st.warning("Nessun file da cancellare.")
 
 # Layout iniziale della pagina web tramite streamlit
 st.set_page_config(page_title="Monitoraggio Fumo", layout="wide")
@@ -77,108 +73,60 @@ st.header("Inserisci i dati della giornata")
 
 scelta_file = st.radio("Vuoi caricare un file della giornata?", ["Sì", "No"], horizontal=True)
 
-if scelta_file == "Sì":
-    uploaded_file = st.file_uploader("Carica il file CSV della giornata", type=["csv"])
+# Caricamento multiplo
+uploaded_files = st.file_uploader("Carica uno o più file CSV", type=["csv"], accept_multiple_files=True)
 
-    if uploaded_file: #Se scelgo di fare un upload del file si apre un ciclo if
-        data_grezzi = pd.read_csv(uploaded_file)
-        data_grezzi['tempo di lettura'] = pd.to_datetime(data_grezzi['tempo di lettura'])
-
-        soglia = st.slider("Soglia per accensione LED", 0.0, 1.0, 0.8) #scelgo la soglia per il quale voglio "pulire" i dati dal rumore di fondo
-        data_grezzi['LED binario'] = data_grezzi['stato del LED'].apply(lambda x: 1 if x > soglia else 0)
-
-        # Selezione della data
-        data_selezionata = None
-        if st.checkbox("Voglio selezionare la data"):
-            data_selezionata = st.date_input("Seleziona la data", min_value=datetime(2000, 1, 1))
-
-        # Selezione stress
-        stress = st.radio("Hai avuto una giornata stressante?", ["Non selezionato", "Sì", "No"])
-
-        # Input sigarette
-        sig_stimate = st.number_input("Quante sigarette pensi di aver fumato oggi?", min_value=0, max_value=100, value=0)
+if uploaded_files:
+    st.write(f"Hai caricato **{len(uploaded_files)}** file.")
+    
+    if st.button("Salva tutti automaticamente"):
+        # Punto di partenza: 1 gennaio dell’anno corrente
+        start_date = datetime(datetime.now().year, 1, 1)
         
-        #imput nicotina/s della sigaretta
-        nicotina_s = st.number_input("Qual è la quantità di nicotina al secondo erogata dalla tua sigaretta?", min_value = 0.00, max_value = 100.00, value = 0.15)
+        dati_da_salvare = []
 
-        # Calcolo nicotina
-        n_on = data_grezzi[data_grezzi['LED binario'] == 1].shape[0]
-        nicotina_totale = n_on * nicotina_s
+        for i, uploaded_file in enumerate(uploaded_files):
+            try:
+                # Leggi file
+                data_grezzi = pd.read_csv(uploaded_file)
+                data_grezzi['tempo di lettura'] = pd.to_datetime(data_grezzi['tempo di lettura'])
 
-        # Controlli per salvataggio
-        if data_selezionata and stress != "Non selezionato":
-            if st.button("Salva nei dati storici"):
-            # Aggiunta dei nuovi dati allo storico df
+                # Parametri fissi
+                soglia = 0.8
+                nicotina_s = 0.3
+                data_grezzi['LED binario'] = data_grezzi['stato del LED'].apply(lambda x: 1 if x > soglia else 0)
+
+                # Calcoli
+                n_on = data_grezzi[data_grezzi['LED binario'] == 1].shape[0]
+                nicotina_totale = n_on * nicotina_s
+                data_selezionata = start_date + timedelta(days=i)  # Data univoca per ogni file
+
+                # Randomizzazione
+                stress = random.choice(["Sì", "No"])
+                sig_stimate = random.randint(13, 20) if n_on > 0 else 0
+
                 nuova_riga = {
-                "email": email,
-                "data": data_selezionata,
-                "stress": stress,
-                "sigarette_stimate": sig_stimate,
-                "nicotina_totale": nicotina_totale
+                    "email" : email,
+                    "data": data_selezionata.date(),
+                    "stress": stress,
+                    "sigarette_stimate": sig_stimate,
+                    "nicotina_totale": nicotina_totale
                 }
-                df = pd.concat([df, pd.DataFrame([nuova_riga])], ignore_index=True)
-                save_data(df)
-                st.success(f"Dati del {data_selezionata} salvati correttamente!")
-        else:
-            st.warning("Seleziona una data e indica se la giornata è stata stressante per poter salvare.")
-            
-        col1, col2 = st.columns(2)
-        
-        with col1:
 
-            # Grafico relativo al csv inserito
-            st.subheader("Andamento della giornata")
-            fig, ax = plt.subplots(figsize = (6, 4))
-            ax.plot(data_grezzi['tempo di lettura'], data_grezzi['LED binario'], drawstyle='steps-post', color='black', linewidth = 1)
-            ax.set_xlabel("Tempo", fontsize = 12)
-            ax.set_ylabel("Stato del LED (0=spento, 1=acceso)", fontsize = 12)
-            ax.tick_params(axis='both', labelsize=6)
-            st.pyplot(fig)
-        
-        with col2:
-            
-            #Diagramma a torta per quantità di accensioni rilevate
-            led_counts = data_grezzi['LED binario'].value_counts()
-            st.markdown("### Utilizzo sigaretta")
-            fig, ax = plt.subplots()
-            ax.pie(led_counts, labels=['Spento', 'Acceso'], autopct='%1.1f%%', startangle=140, colors=['#D9534F', '#5BC0DE'])
-            st.pyplot(fig)
+                
 
-#Grafico relativo alla quantità di nicotina nei diversi giorni
-else:
-    
-    st.header("Inserimento manuale dei dati")
-    
-    #inserire la data
-    data_selezionata = None
-    if st.checkbox("Voglio selezionare la data"):
-        data_selezionata = st.date_input("Seleziona la data", min_value=datetime(2000, 1, 1))
+                # Nel ciclo:
+                nuova_riga["email"] = email  # Aggiungi email
+                dati_da_salvare.append(nuova_riga)
 
-    # Selezione stress
-    stress = st.radio("Hai avuto una giornata stressante?", ["Non selezionato", "Sì", "No"])
+        # Fuori dal ciclo:
+        if dati_da_salvare:
+            nuovo_df = pd.DataFrame(dati_da_salvare)
+            save_data(nuovo_df)
 
-    # Calcolo nicotina manuale
-    sig_stimate = st.number_input("Quante sigarette pensi di aver fumato oggi?", min_value=0, max_value=100, value=0)
-    nicotina_per_sigaretta = st.number_input("Qual è la quantità di nicotina erogata dalla tua sigaretta?", min_value = 0.00, max_value = 100.00, value = 0.15)
-    nicotina_totale = sig_stimate * nicotina_per_sigaretta
-    st.info(f"Nicotina stimata: {nicotina_totale:.2f} mg (input manuale)")
-    
-    # Controlli per salvataggio
-    if data_selezionata and stress != "Non selezionato":
-        if st.button("Salva nei dati storici"):
-        # Aggiunta dei nuovi dati allo storico df
-            nuova_riga = {
-            "email": email,
-            "data": data_selezionata,
-            "stress": stress,
-            "sigarette_stimate": sig_stimate,
-            "nicotina_totale": nicotina_totale
-            }
-            df = pd.concat([df, pd.DataFrame([nuova_riga])], ignore_index=True)
-            save_data(df)
-            st.success(f"Dati del {data_selezionata} salvati correttamente!")
-    else:
-        st.warning("Seleziona una data e indica se la giornata è stata stressante per poter salvare.")
+                except Exception as e:
+                    st.error(f"Errore nel file {uploaded_file.name}: {str(e)}")
+
 
 if not df.empty:
         st.header("Consumo di nicotina nel tempo")
@@ -293,7 +241,8 @@ if not df.empty:
             st.pyplot(fig)
 
         somma_nicotina = df_periodo['nicotina_totale'].sum()
-        somma_sigarette = df_periodo['sig_stimate'].sum()
+        somma_sigarette = df_periodo['sigarette_stimate'].sum()
         st.markdown(f"**Media nicotina assunta nel periodo selezionato:** {media_nicotina:.2f} mg")
         st.markdown(f"**Totale nicotina assunta nel periodo selezionato:** {somma_nicotina:.2f} mg")
         st.markdown(f"**Totale sigarette fumate nel periodo selezionato:** {somma_sigarette:.0f}")
+

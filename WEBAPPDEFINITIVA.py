@@ -118,18 +118,14 @@ if uploaded_files:
                 # Nel ciclo:
                 nuova_riga["email"] = email  # Aggiungi email
                 dati_da_salvare.append(nuova_riga)
-             except Exception as e:
-                    st.error(f"Errore nel file {uploaded_file.name}: {str(e)}")
-
+            except Exception as e:
+                st.error(f"Errore nel file {uploaded_file.name}: {str(e)}")
+                
         # Fuori dal ciclo:
         if dati_da_salvare:
             nuovo_df = pd.DataFrame(dati_da_salvare)
             save_data(nuovo_df)
-
-                except Exception as e:
-                    st.error(f"Errore nel file {uploaded_file.name}: {str(e)}")
-
-
+            
 if not df.empty:
         st.header("Consumo di nicotina nel tempo")
         # Scelta modalità di visualizzazione

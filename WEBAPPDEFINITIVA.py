@@ -118,6 +118,8 @@ if uploaded_files:
                 # Nel ciclo:
                 nuova_riga["email"] = email  # Aggiungi email
                 dati_da_salvare.append(nuova_riga)
+             except Exception as e:
+                    st.error(f"Errore nel file {uploaded_file.name}: {str(e)}")
 
         # Fuori dal ciclo:
         if dati_da_salvare:
